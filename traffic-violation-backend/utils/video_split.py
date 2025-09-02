@@ -1,3 +1,4 @@
+import os
 from collections import deque
 
 CLIP_SAVE_PATH = "data/violations/clips"
