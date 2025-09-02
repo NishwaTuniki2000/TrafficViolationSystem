@@ -50,11 +50,13 @@ async def detect_video(file: UploadFile = File(...)):
                 cv2.imwrite(violation_frame_path, frame)
                 print(f"Violation detected on frame {frame_count}, saved image to {violation_frame_path}")
 
+                public_path = f"/static/violations/violation_{frame_count}.jpg"
                 violations.append({
                     "frame": frame_count,
-                    "image_path": violation_frame_path,
+                    "image_url": public_path,   # renamed for clarity
                     "detections": detections,
                 })
+
 
             frame_count += 1
 
