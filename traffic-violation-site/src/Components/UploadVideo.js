@@ -22,13 +22,10 @@ export default function UploadVideo() {
     formData.append("file", videoFile);
 
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/detect-video`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("/api/detect-video", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to process video");
@@ -59,16 +56,13 @@ export default function UploadVideo() {
           {violations.map((v, i) => (
             <div key={i} style={{ marginBottom: "20px" }}>
               <p>Frame: {v.frame}</p>
-
-              {/* Show violation frame image */}
               {v.image_url && (
                 <img
-                  src={`${process.env.REACT_APP_API_URL}${v.image_url}`}
+                  src={`/api${v.image_url}`}
                   alt={`Violation frame ${v.frame}`}
                   style={{ width: "300px", border: "1px solid black" }}
                 />
               )}
-
               <pre>{JSON.stringify(v.detections, null, 2)}</pre>
             </div>
           ))}
