@@ -22,7 +22,7 @@ export default function UploadVideo() {
     formData.append("file", videoFile);
 
     try {
-      const response = await fetch("http://localhost:8000/detect-video", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/detect-video`, {
         method: "POST",
         body: formData,
       });
@@ -32,8 +32,6 @@ export default function UploadVideo() {
       }
 
       const data = await response.json();
-
-      // data.violations is array of { frame, image_path, detections }
       setViolations(data.violations || []);
     } catch (err) {
       setError(err.message);
@@ -58,9 +56,8 @@ export default function UploadVideo() {
           {violations.map((v, i) => (
             <div key={i} style={{ marginBottom: "20px" }}>
               <p>Frame: {v.frame}</p>
-              {/* Show violation frame image */}
               <img
-                src={`http://localhost:8000/${v.image_path.replace("./data/", "")}`}
+                src={`${process.env.REACT_APP_API_URL}/${v.image_path.replace("./data/", "")}`}
                 alt={`Violation frame ${v.frame}`}
                 style={{ width: "300px", border: "1px solid black" }}
               />
