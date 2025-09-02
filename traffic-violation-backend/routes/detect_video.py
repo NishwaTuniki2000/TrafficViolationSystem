@@ -3,16 +3,25 @@ from fastapi.responses import JSONResponse
 import os
 import cv2
 import shutil
+
 from detector import detect
+from detector.tracker import track_objects
+from detector.rules import check_violations
+from detector.tl_state import TrafficLightState
+from detector.speed import SpeedEstimator
 
 router = APIRouter()
+
+# initialize helpers
+tl_tracker = TrafficLightState()
+speed_estimator = SpeedEstimator()
 
 @router.post("/detect-video")
 async def detect_video(file: UploadFile = File(...)):
     try:
         print(f"Received video upload: {file.filename}")
-        
-        # Save uploaded video to data/uploaded_videos/
+
+        # Save uploaded video
         upload_folder = "./data/uploaded_videos"
         os.makedirs(upload_folder, exist_ok=True)
         video_path = os.path.join(upload_folder, file.filename)
@@ -24,45 +33,54 @@ async def detect_video(file: UploadFile = File(...)):
         # Open video
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-            print("Failed to open video")
             return JSONResponse(status_code=400, content={"message": "Could not open video."})
 
         frame_count = 0
         violations = []
-
-        # Make sure violations folder exists
         violation_folder = "./data/violations"
         os.makedirs(violation_folder, exist_ok=True)
 
         while True:
             ret, frame = cap.read()
             if not ret:
-                print("No more frames to read.")
                 break
 
             print(f"Processing frame {frame_count}")
+
+            # Step 1: Detect objects
             detections = detect.detect_objects(frame)
 
-            if len(detections) > 0:
-                violation_frame_path = os.path.join(violation_folder, f"violation_{frame_count}.jpg")
+            # Step 2: Track objects across frames
+            tracked_objs = track_objects(frame, detections)
+
+            # Step 3: Update traffic light state
+            light_state = tl_tracker.update(detections)
+
+            # Step 4: Estimate speed for each tracked object
+            for obj in tracked_objs:
+                speed = speed_estimator.estimate(obj["track_id"], obj["bbox"])
+                obj["speed_kph"] = speed
+
+            # Step 5: Check rules (red light, speeding, etc.)
+            frame_violations = check_violations(light_state, tracked_objs, detections)
+
+            if frame_violations:
+                # Save violation frame
+                violation_frame_path = os.path.join(
+                    violation_folder, f"violation_{frame_count}.jpg"
+                )
                 cv2.imwrite(violation_frame_path, frame)
-                print(f"Violation detected on frame {frame_count}, saved image to {violation_frame_path}")
 
-                # return URL that frontend can directly access
-                public_url = f"/violations/violation_{frame_count}.jpg"
-
+                # Append violations with frame info
                 violations.append({
                     "frame": frame_count,
-                    "image_url": public_url,   # matches FastAPI StaticFiles
-                    "detections": detections,
+                    "image_url": f"/violations/violation_{frame_count}.jpg",
+                    "violations": frame_violations,
                 })
 
             frame_count += 1
 
         cap.release()
-        print(f"Video processing complete. Total frames processed: {frame_count}")
-        print(f"Total violations detected: {len(violations)}")
-
         return {"message": "Video processed", "violations": violations}
 
     except Exception as e:
