@@ -20,7 +20,7 @@ const Results = ({ violations = [], clipPath }) => {
         <div>
           <h3>Violation Video Clip</h3>
           <video controls width="600">
-            <source src={`http://127.0.0.1:8000/${clipPath}`} type="video/mp4" />
+            <source src={`${process.env.REACT_APP_API_URL}/${clipPath}`} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
