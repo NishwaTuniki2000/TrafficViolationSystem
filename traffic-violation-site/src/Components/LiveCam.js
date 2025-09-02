@@ -37,7 +37,7 @@ const LiveCam = () => {
       return;
     }
 
- const ws = new WebSocket(`${process.env.REACT_APP_WS_URL}/live-video`);
+ const ws = new WebSocket(`${process.env.REACT_APP_API_URL.replace(/^http/, "ws")}/live-video`);
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
