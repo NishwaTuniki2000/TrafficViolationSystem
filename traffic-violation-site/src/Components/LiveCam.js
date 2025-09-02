@@ -5,7 +5,6 @@ const LiveCam = () => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    // Get user camera stream and show it in video tag
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({ video: true })
@@ -20,13 +19,10 @@ const LiveCam = () => {
         });
     }
 
-    // Cleanup: close WebSocket and stop video stream on unmount
     return () => {
-      if (socket) {
-        socket.close();
-      }
+      if (socket) socket.close();
       if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+        videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
       }
     };
   }, [socket]);
@@ -37,7 +33,7 @@ const LiveCam = () => {
       return;
     }
 
- const ws = new WebSocket(`${process.env.REACT_APP_API_URL.replace(/^http/, "ws")}/live-video`);
+    const ws = new WebSocket(`wss://${window.location.host}/api/live-video`);
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
@@ -45,7 +41,6 @@ const LiveCam = () => {
     };
 
     ws.onmessage = (event) => {
-      // Show violation message from backend
       alert("Violation detected: " + event.data);
     };
 
@@ -55,7 +50,7 @@ const LiveCam = () => {
     };
 
     ws.onclose = () => {
-      console.log("WebSocket connection closed");
+      console.log("WebSocket closed");
       alert("Live detection stopped");
       setSocket(null);
     };
@@ -65,19 +60,17 @@ const LiveCam = () => {
 
   const captureFrame = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      alert("WebSocket is not connected. Please start the live detection first.");
+      alert("WebSocket is not connected. Start live detection first.");
       return;
     }
     if (videoRef.current) {
       const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      const frameData = canvas.toDataURL("image/jpeg"); // base64 jpeg
-
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const frameData = canvas.toDataURL("image/jpeg");
       socket.send(frameData);
-      console.log("Frame sent to backend");
     }
   };
 
