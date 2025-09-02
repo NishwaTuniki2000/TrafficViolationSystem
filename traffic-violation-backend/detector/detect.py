@@ -2,25 +2,26 @@ from ultralytics import YOLO
 import cv2
 
 # Load the trained model
-model = YOLO("models/yolov8_traffic.pt")  # make sure this path is correct
+model = YOLO("models/yolov8_traffic.pt")  # relative path
 
-# Get class names from model
+# Get class names
 class_names = model.names  # {class_id: class_name}
 
-def detect_objects(frame, conf_thresh=0.3):
+def detect_objects(frame, conf_thresh=0.25):
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    results = model(rgb_frame)[0]  # YOLOv8 returns a list; we use the first element
+    # Run detection
+    results = model.predict(rgb_frame, imgsz=640, conf=conf_thresh)[0]
 
     detections = []
     for box in results.boxes:
-        conf = float(box.conf)
+        conf = float(box.conf[0].item())
         if conf < conf_thresh:
             continue
 
-        cls_id = int(box.cls)
+        cls_id = int(box.cls[0].item())
         class_name = class_names.get(cls_id, "unknown")
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
         detections.append({
             "class_id": cls_id,
