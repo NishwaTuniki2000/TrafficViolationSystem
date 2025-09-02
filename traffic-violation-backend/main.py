@@ -25,17 +25,16 @@ app.mount("/violations", StaticFiles(directory="data/violations"), name="violati
 # Include /detect-video route from detect_video.py
 app.include_router(detect_video.router)
 
-# Load YOLO model (used for WebSocket live video)
-traffic_model = YOLO("models/yolov8_traffic.pt")
-
-# Simple violation detection (for WebSocket live stream)
 def detect_red_light_violation(frame):
-    results = traffic_model(frame)[0]
+    # Load YOLOv8n on demand (smallest model, ~5MB)
+    model = YOLO("yolov8n.pt")
+    results = model(frame)[0]
     for box in results.boxes:
         conf = float(box.conf[0])
         if conf > 0.5:
             return True
     return False
+
 
 # Live video WebSocket endpoint
 @app.websocket("/live-video")
