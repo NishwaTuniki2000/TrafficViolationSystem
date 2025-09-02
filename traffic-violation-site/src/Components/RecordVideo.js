@@ -30,10 +30,11 @@ const RecordVideo = () => {
                   formData.append("video", file);
 
                   try {
-                    const res = await fetch("ws://trafficviolationsystem-9z2m.onrender.com/live-video", {
-                      method: "POST",
-                      body: formData,
-                    });
+                  const res = await fetch(`${process.env.REACT_APP_API_URL}/detect-video`, {
+                  method: "POST",
+                  body: formData,
+                  });
+
 
                     const data = await res.json();
                     alert("Upload successful: " + data.filename);
