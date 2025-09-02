@@ -1,20 +1,16 @@
 {
-  "public": true,
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "src": "traffic-violation-site/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://trafficviolationsystem-9z2m.onrender.com/:path*"
+      "src": "/api/(.*)",
+      "dest": "https://trafficviolationsystem-9z2m.onrender.com/$1"
     }
   ]
 }
