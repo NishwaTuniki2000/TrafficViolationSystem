@@ -1,13 +1,14 @@
 from ultralytics import YOLO
 import cv2
 
-# Load the trained model
-model = YOLO("models/yolov8_traffic.pt")  # relative path
-
-# Get class names
-class_names = model.names  # {class_id: class_name}
+# Use YOLOv8n (tiny model, ~5 MB) instead of heavy custom model
+# Remove global model load to save memory
 
 def detect_objects(frame, conf_thresh=0.25):
+    # Lazy-load the model inside the function (only when called)
+    model = YOLO("yolov8n.pt")  # automatically downloads lightweight model
+    class_names = model.names  # {class_id: class_name}
+
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Run detection
