@@ -3,8 +3,7 @@ from fastapi.responses import JSONResponse
 import os
 import cv2
 import shutil
-from detector import detect  # your detect.py module
-# from utils.io import save_frame  # you can remove if not used
+from detector import detect
 
 router = APIRouter()
 
@@ -42,21 +41,21 @@ async def detect_video(file: UploadFile = File(...)):
                 break
 
             print(f"Processing frame {frame_count}")
-            detections = detect.detect_objects(frame)  # your detection function
+            detections = detect.detect_objects(frame)
 
-            # Demo: consider any detection a violation
             if len(detections) > 0:
                 violation_frame_path = os.path.join(violation_folder, f"violation_{frame_count}.jpg")
                 cv2.imwrite(violation_frame_path, frame)
                 print(f"Violation detected on frame {frame_count}, saved image to {violation_frame_path}")
 
-                public_path = f"/static/violations/violation_{frame_count}.jpg"
+                # return URL that frontend can directly access
+                public_url = f"/violations/violation_{frame_count}.jpg"
+
                 violations.append({
                     "frame": frame_count,
-                    "image_url": public_path,   # renamed for clarity
+                    "image_url": public_url,   # matches FastAPI StaticFiles
                     "detections": detections,
                 })
-
 
             frame_count += 1
 
