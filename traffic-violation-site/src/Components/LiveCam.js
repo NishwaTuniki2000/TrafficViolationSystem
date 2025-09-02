@@ -37,7 +37,7 @@ const LiveCam = () => {
       return;
     }
 
-    const ws = new WebSocket("ws://trafficviolationsystem-9z2m.onrender.com/live-video");
+    const ws = new WebSocket("wss://trafficviolationsystem-9z2m.onrender.com/live-video");
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
